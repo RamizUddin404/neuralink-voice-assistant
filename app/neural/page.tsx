@@ -118,8 +118,8 @@ export default function NeuralBridgePage() {
         setPhoneState({ activeApp: 'home', appData: parsedSignal.parameters });
       }
 
-      // Log to Firestore
-      if (user) {
+      // Log to Firestore if not guest
+      if (user && user.uid !== 'guest') {
         await addDoc(collection(db, 'commands'), {
           userId: user.uid,
           rawText: commandText,
@@ -256,14 +256,6 @@ export default function NeuralBridgePage() {
         );
     }
   };
-
-  if (!user) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <p className="text-zinc-500">Please sign in to access the Neural Bridge.</p>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-full bg-zinc-950 p-8 overflow-y-auto">

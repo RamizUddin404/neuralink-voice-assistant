@@ -43,7 +43,7 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    if (!user) {
+    if (!user || user.uid === 'guest') {
       setIsLoading(false);
       return;
     }
@@ -75,7 +75,10 @@ export default function ProfilePage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || user.uid === 'guest') {
+        setMessage({ type: 'success', text: 'Preferences updated locally (Guest Mode).' });
+        return;
+    }
     
     setIsSaving(true);
     setMessage({ type: '', text: '' });
@@ -120,14 +123,6 @@ export default function ProfilePage() {
     newCommands.splice(index, 1);
     setPrefs({ ...prefs, customCommands: newCommands });
   };
-
-  if (!user) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <p className="text-zinc-500">Please sign in to access your profile and training settings.</p>
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (

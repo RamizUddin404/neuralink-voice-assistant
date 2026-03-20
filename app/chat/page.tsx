@@ -71,14 +71,6 @@ export default function ChatPage() {
     }
   };
 
-  if (!user) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <p className="text-zinc-500">Please sign in to use AI Chat.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-full bg-zinc-950">
       {/* Header */}

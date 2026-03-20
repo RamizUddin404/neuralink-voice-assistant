@@ -51,32 +51,15 @@ export function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-zinc-800">
-        {user ? (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 overflow-hidden">
-              {user.photoURL ? (
-                <Image src={user.photoURL} alt="" width={32} height={32} className="rounded-full" referrerPolicy="no-referrer" />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-zinc-800" />
-              )}
-              <span className="text-sm font-medium text-zinc-300 truncate">{user.displayName}</span>
-            </div>
-            <button
-              onClick={signOut}
-              className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+        <div className="flex items-center gap-3 overflow-hidden p-2 bg-zinc-800/50 rounded-xl">
+          <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+            <UserCircle className="w-5 h-5" />
           </div>
-        ) : (
-          <button
-            onClick={signIn}
-            className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl transition-colors font-medium"
-          >
-            <LogIn className="w-4 h-4" />
-            Sign In
-          </button>
-        )}
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-medium text-zinc-300 truncate">Guest User</span>
+            <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Offline Mode</span>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,8 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, signInWithCredential } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { Capacitor } from '@capacitor/core';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import firebaseConfig from '../firebase-applet-config.json';
 
 // Initialize Firebase SDK
@@ -12,8 +14,15 @@ const provider = new GoogleAuthProvider();
 
 export const signInWithGoogle = async () => {
   try {
-    const result = await signInWithPopup(auth, provider);
-    return result.user;
+    if (Capacitor.isNativePlatform()) {
+      const user = await GoogleAuth.signIn();
+      const credential = GoogleAuthProvider.credential(user.authentication.idToken);
+      const result = await signInWithCredential(auth, credential);
+      return result.user;
+    } else {
+      const result = await signInWithPopup(auth, provider);
+      return result.user;
+    }
   } catch (error) {
     console.error("Error signing in with Google", error);
     throw error;

@@ -5,4 +5,5 @@
     <string name="package_name">com.neuralink.voiceassistant</string>
     <string name="custom_url_scheme">com.neuralink.voiceassistant</string>
     <string name="accessibility_service_description">Neuralink Voice Assistant Accessibility Service for handling voice commands and interactions.</string>
+    <string name="server_client_id">258794901471-l4hm524teu8oiiodam70qqthumvm48ml.apps.googleusercontent.com</string>
 </resources>

@@ -69,6 +69,7 @@ export default function ProfilePage() {
             speechRate: data.speechRate || 1.0,
             speechPatterns: data.speechPatterns || '',
             customCommands: data.customCommands || [],
+            openRouteApiKey: data.openRouteApiKey || '', // Add this line
           });
         }
       } catch (error) {

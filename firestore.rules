@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    function uidUnchanged() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == request.auth.uid;
+    }
+    function uidNotModified() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId;
+    }
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+    function isValidString(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+    
+    // Domain Validators
+    function isValidUser() {
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'createdAt']) &&
+             isValidString('uid', 1, 100) &&
+             isValidString('email', 3, 100) &&
+             request.resource.data.createdAt is timestamp;
+    }
+
+    function isValidCommand() {
+      return hasOnlyAllowedFields(['userId', 'rawText', 'action', 'targetApp', 'parameters', 'status', 'createdAt']) &&
+             isValidString('userId', 1, 100) &&
+             isValidString('rawText', 1, 1000) &&
+             isValidString('action', 1, 100) &&
+             isValidString('targetApp', 1, 100) &&
+             request.resource.data.status in ['pending', 'executed', 'failed'] &&
+             request.resource.data.createdAt is timestamp;
+    }
+
+    function isValidUserPreferences() {
+      return hasOnlyAllowedFields(['userId', 'wakeWord', 'voiceStyle', 'speechRate', 'speechPatterns', 'customCommands', 'updatedAt']) &&
+             isValidString('userId', 1, 100) &&
+             isValidString('wakeWord', 1, 50) &&
+             isValidString('voiceStyle', 1, 50) &&
+             request.resource.data.speechRate is number &&
+             (!('speechPatterns' in request.resource.data) || isValidString('speechPatterns', 0, 2000)) &&
+             (!('customCommands' in request.resource.data) || (request.resource.data.customCommands is list && request.resource.data.customCommands.size() <= 50)) &&
+             request.resource.data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser() && request.resource.data.uid == userId;
+      allow update: if isOwner(userId) && isValidUser() && request.resource.data.uid == resource.data.uid && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if false;
+    }
+
+    match /commands/{commandId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidCommand() && uidUnchanged();
+      allow update: if isDocOwner() && isValidCommand() && uidNotModified() && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isDocOwner();
+    }
+    match /userPreferences/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserPreferences() && request.resource.data.userId == userId;
+      allow update: if isOwner(userId) && isValidUserPreferences() && request.resource.data.userId == resource.data.userId;
+      allow delete: if false;
+    }
+  }
+}

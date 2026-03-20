@@ -1,0 +1,69 @@
+{
+  "entities": {
+    "NeuralCommand": {
+      "title": "Neural Command",
+      "description": "A log of voice commands translated into neural signals",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "rawText": { "type": "string" },
+        "action": { "type": "string" },
+        "targetApp": { "type": "string" },
+        "parameters": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "executed", "failed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "rawText", "action", "targetApp", "status", "createdAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "UserPreferences": {
+      "title": "User Preferences",
+      "description": "User specific settings for the voice assistant",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "wakeWord": { "type": "string" },
+        "voiceStyle": { "type": "string" },
+        "speechPatterns": { "type": "string" },
+        "customCommands": { 
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "command": { "type": "string" },
+              "action": { "type": "string" }
+            }
+          }
+        },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "wakeWord", "voiceStyle", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/commands/{commandId}": {
+      "schema": { "$ref": "#/entities/NeuralCommand" },
+      "description": "Logs of neural commands executed by the user"
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles"
+    },
+    "/userPreferences/{userId}": {
+      "schema": { "$ref": "#/entities/UserPreferences" },
+      "description": "User preferences for voice assistant"
+    }
+  }
+}

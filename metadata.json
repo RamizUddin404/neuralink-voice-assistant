@@ -1,0 +1,5 @@
+{
+  "name": "Neuralink Voice Assistant",
+  "description": "A futuristic voice assistant with real-time AI conversations, multimodal chat, vision analysis, and media generation.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"]
+}

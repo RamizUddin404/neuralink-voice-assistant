@@ -19,11 +19,13 @@ export default function LiveVoicePage() {
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   
   const aiRef = useRef<GoogleGenAI | null>(null);
+useEffect(() => {
+  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || localStorage.getItem('NEXT_PUBLIC_GEMINI_API_KEY');
+  if (apiKey) {
+    aiRef.current = new GoogleGenAI({ apiKey });
+  }
+}, []);
 
-  useEffect(() => {
-    if (process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
-      aiRef.current = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
-    }
     return () => stopRecording();
   }, []);
 

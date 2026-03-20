@@ -33,8 +33,9 @@ export default function NeuralBridgePage() {
   const aiRef = useRef<GoogleGenAI | null>(null);
 
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
-      aiRef.current = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || localStorage.getItem('NEXT_PUBLIC_GEMINI_API_KEY');
+    if (apiKey) {
+      aiRef.current = new GoogleGenAI({ apiKey });
     }
     
     // Load saved speech rate

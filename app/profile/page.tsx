@@ -19,6 +19,7 @@ type UserPreferences = {
   speechPatterns: string;
   customCommands: CustomCommand[];
   openRouteApiKey: string;
+  geminiApiKey: string;
 };
 
 const VOICE_STYLES = [
@@ -42,13 +43,20 @@ export default function ProfilePage() {
     speechPatterns: '',
     customCommands: [],
     openRouteApiKey: '',
+    geminiApiKey: '',
   });
 
   useEffect(() => {
-    // Load API Key from local storage
-    const savedApiKey = localStorage.getItem('NEXT_PUBLIC_OPENROUTE_API_KEY');
-    if (savedApiKey) {
-      setPrefs(prev => ({ ...prev, openRouteApiKey: savedApiKey }));
+    // Load API Keys from local storage
+    const savedOpenRouteKey = localStorage.getItem('NEXT_PUBLIC_OPENROUTE_API_KEY');
+    const savedGeminiKey = localStorage.getItem('NEXT_PUBLIC_GEMINI_API_KEY');
+    
+    if (savedOpenRouteKey || savedGeminiKey) {
+      setPrefs(prev => ({ 
+        ...prev, 
+        openRouteApiKey: savedOpenRouteKey || '',
+        geminiApiKey: savedGeminiKey || ''
+      }));
     }
 
     if (!user || user.uid === 'guest') {
@@ -69,7 +77,8 @@ export default function ProfilePage() {
             speechRate: data.speechRate || 1.0,
             speechPatterns: data.speechPatterns || '',
             customCommands: data.customCommands || [],
-            openRouteApiKey: data.openRouteApiKey || '', // Add this line
+            openRouteApiKey: data.openRouteApiKey || '',
+            geminiApiKey: data.geminiApiKey || '',
           });
         }
       } catch (error) {
@@ -85,8 +94,9 @@ export default function ProfilePage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Always save API Key to local storage
+    // Always save API Keys to local storage
     localStorage.setItem('NEXT_PUBLIC_OPENROUTE_API_KEY', prefs.openRouteApiKey);
+    localStorage.setItem('NEXT_PUBLIC_GEMINI_API_KEY', prefs.geminiApiKey);
 
     if (!user || user.uid === 'guest') {
         setMessage({ type: 'success', text: 'Preferences updated locally (Guest Mode).' });
@@ -319,6 +329,18 @@ export default function ProfilePage() {
               Advanced Settings
             </h2>
             
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-400">Gemini API Key</label>
+              <input
+                type="password"
+                value={prefs.geminiApiKey}
+                onChange={(e) => setPrefs({ ...prefs, geminiApiKey: e.target.value })}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors text-zinc-100 placeholder:text-zinc-600"
+                placeholder="Enter your Google Gemini API Key"
+              />
+              <p className="text-xs text-zinc-500">Required for AI intelligence. Get one from Google AI Studio.</p>
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium text-zinc-400">OpenRouteService API Key</label>
               <input

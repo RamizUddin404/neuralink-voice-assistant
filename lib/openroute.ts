@@ -1,12 +1,17 @@
-const OPENROUTE_API_KEY = process.env.NEXT_PUBLIC_OPENROUTE_API_KEY;
-
 export async function getDirections(start: [number, number], end: [number, number]) {
-  if (!OPENROUTE_API_KEY) {
+  let apiKey = process.env.NEXT_PUBLIC_OPENROUTE_API_KEY;
+  
+  // Try local storage if env is not set
+  if (!apiKey && typeof window !== 'undefined') {
+    apiKey = localStorage.getItem('NEXT_PUBLIC_OPENROUTE_API_KEY') || '';
+  }
+
+  if (!apiKey) {
     console.warn("OpenRouteService API Key is missing.");
     return null;
   }
 
-  const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${OPENROUTE_API_KEY}&start=${start[0]},${start[1]}&end=${end[0]},${end[1]}`;
+  const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${start[0]},${start[1]}&end=${end[0]},${end[1]}`;
 
   try {
     const response = await fetch(url);

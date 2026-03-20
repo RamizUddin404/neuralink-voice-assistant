@@ -18,6 +18,7 @@ type UserPreferences = {
   speechRate: number;
   speechPatterns: string;
   customCommands: CustomCommand[];
+  openRouteApiKey: string;
 };
 
 const VOICE_STYLES = [
@@ -40,9 +41,16 @@ export default function ProfilePage() {
     speechRate: 1.0,
     speechPatterns: '',
     customCommands: [],
+    openRouteApiKey: '',
   });
 
   useEffect(() => {
+    // Load API Key from local storage
+    const savedApiKey = localStorage.getItem('NEXT_PUBLIC_OPENROUTE_API_KEY');
+    if (savedApiKey) {
+      setPrefs(prev => ({ ...prev, openRouteApiKey: savedApiKey }));
+    }
+
     if (!user || user.uid === 'guest') {
       setIsLoading(false);
       return;
@@ -75,6 +83,10 @@ export default function ProfilePage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Always save API Key to local storage
+    localStorage.setItem('NEXT_PUBLIC_OPENROUTE_API_KEY', prefs.openRouteApiKey);
+
     if (!user || user.uid === 'guest') {
         setMessage({ type: 'success', text: 'Preferences updated locally (Guest Mode).' });
         return;
@@ -298,6 +310,25 @@ export default function ProfilePage() {
                 ))}
               </div>
             )}
+          </div>
+
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 space-y-6">
+            <h2 className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
+              <Settings className="w-5 h-5 text-indigo-400" />
+              Advanced Settings
+            </h2>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-400">OpenRouteService API Key</label>
+              <input
+                type="password"
+                value={prefs.openRouteApiKey}
+                onChange={(e) => setPrefs({ ...prefs, openRouteApiKey: e.target.value })}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors text-zinc-100 placeholder:text-zinc-600"
+                placeholder="Enter your OpenRouteService API Key"
+              />
+              <p className="text-xs text-zinc-500">Required for map navigation features. Key is stored locally on this device.</p>
+            </div>
           </div>
 
           {/* Actions */}

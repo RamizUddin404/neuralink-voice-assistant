@@ -6,6 +6,7 @@ import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { UserCircle, Save, Plus, Trash2, Loader2, Mic, Settings, BrainCircuit } from 'lucide-react';
 import { motion } from 'motion/react';
+import { Capacitor } from '@capacitor/core';
 
 type CustomCommand = {
   command: string;
@@ -35,6 +36,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [isAccessibilityEnabled, setIsAccessibilityEnabled] = useState(false);
   
   const [prefs, setPrefs] = useState<UserPreferences>({
     wakeWord: 'Neural',
@@ -57,6 +59,22 @@ export default function ProfilePage() {
         openRouteApiKey: savedOpenRouteKey || '',
         geminiApiKey: savedGeminiKey || ''
       }));
+    }
+
+    // Check accessibility status if on native platform
+    if (Capacitor.isNativePlatform()) {
+      const checkStatus = async () => {
+        try {
+          const { AccessibilityPlugin } = (window as any).Capacitor.Plugins;
+          if (AccessibilityPlugin) {
+            const { enabled } = await AccessibilityPlugin.checkAccessibilityStatus();
+            setIsAccessibilityEnabled(enabled);
+          }
+        } catch (e) {
+          console.error("Accessibility plugin error:", e);
+        }
+      };
+      checkStatus();
     }
 
     if (!user || user.uid === 'guest') {
@@ -145,6 +163,21 @@ export default function ProfilePage() {
     const newCommands = [...prefs.customCommands];
     newCommands.splice(index, 1);
     setPrefs({ ...prefs, customCommands: newCommands });
+  };
+
+  const handleOpenAccessibility = async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const { AccessibilityPlugin } = (window as any).Capacitor.Plugins;
+        if (AccessibilityPlugin) {
+          await AccessibilityPlugin.openAccessibilitySettings();
+        }
+      } catch (e) {
+        console.error("Error opening accessibility settings", e);
+      }
+    } else {
+      alert("This feature is only available on Android.");
+    }
   };
 
   if (isLoading) {
@@ -351,6 +384,24 @@ export default function ProfilePage() {
                 placeholder="Enter your OpenRouteService API Key"
               />
               <p className="text-xs text-zinc-500">Required for map navigation features. Key is stored locally on this device.</p>
+            </div>
+
+            <div className="pt-4 border-t border-zinc-800">
+               <div className="flex items-center justify-between">
+                 <div>
+                   <h3 className="text-sm font-medium text-zinc-200">Accessibility Service</h3>
+                   <p className="text-xs text-zinc-500">Needed for system-wide voice control.</p>
+                 </div>
+                 <button
+                   type="button"
+                   onClick={handleOpenAccessibility}
+                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                     isAccessibilityEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' : 'bg-indigo-600 text-white hover:bg-indigo-500'
+                   }`}
+                 >
+                   {isAccessibilityEnabled ? 'Enabled' : 'Enable Service'}
+                 </button>
+               </div>
             </div>
           </div>
 

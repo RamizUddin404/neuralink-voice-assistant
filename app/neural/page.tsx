@@ -3,13 +3,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/components/auth-provider';
 import { GoogleGenAI, Type } from '@google/genai';
-import { Mic, Send, Cpu, Smartphone, Mail, Music, Clock, Loader2, ArrowRight, CheckCircle2, MessageSquare, BrainCircuit, Settings2 } from 'lucide-react';
+import { Mic, Send, Cpu, Smartphone, Mail, Music, Clock, Loader2, ArrowRight, CheckCircle2, MessageSquare, BrainCircuit, Settings2, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { getDirections } from '@/lib/openroute';
 
 type PhoneState = {
-  activeApp: 'home' | 'mail' | 'music' | 'clock';
+  activeApp: 'home' | 'mail' | 'music' | 'clock' | 'maps';
   appData: any;
 };
 
@@ -73,11 +74,11 @@ export default function NeuralBridgePage() {
           responseSchema: {
             type: Type.OBJECT,
             properties: {
-              action: { type: Type.STRING, description: "The core action (e.g., COMPOSE_EMAIL, PLAY_MUSIC, SET_ALARM, OPEN_APP)" },
-              targetApp: { type: Type.STRING, description: "The target application (e.g., mail, music, clock, home)" },
+              action: { type: Type.STRING, description: "The core action (e.g., COMPOSE_EMAIL, PLAY_MUSIC, SET_ALARM, OPEN_APP, NAVIGATE)" },
+              targetApp: { type: Type.STRING, description: "The target application (e.g., mail, music, clock, home, maps)" },
               parameters: { 
                 type: Type.OBJECT, 
-                description: "Key-value pairs of extracted parameters (e.g., recipient, subject, body, songName, time)" 
+                description: "Key-value pairs of extracted parameters (e.g., recipient, subject, body, songName, time, destination, origin)" 
               },
               confidence: { type: Type.NUMBER, description: "Confidence score from 0.0 to 1.0" }
             },
@@ -105,6 +106,14 @@ export default function NeuralBridgePage() {
         setPhoneState({ activeApp: 'music', appData: parsedSignal.parameters });
       } else if (app.includes('clock') || parsedSignal.action === 'SET_ALARM') {
         setPhoneState({ activeApp: 'clock', appData: parsedSignal.parameters });
+      } else if (app.includes('maps') || parsedSignal.action === 'NAVIGATE') {
+        // Fetch directions if navigate
+        if (process.env.NEXT_PUBLIC_OPENROUTE_API_KEY) {
+             // Mock start point (e.g., New York) and end point
+             // In a real app, geocoding would happen here. 
+             // For now, we just pass the raw destination string to display.
+        }
+        setPhoneState({ activeApp: 'maps', appData: parsedSignal.parameters });
       } else {
         setPhoneState({ activeApp: 'home', appData: parsedSignal.parameters });
       }
@@ -197,11 +206,45 @@ export default function NeuralBridgePage() {
             </div>
           </div>
         );
+      case 'maps':
+        return (
+          <div className="flex flex-col h-full bg-zinc-100 text-black p-4 rounded-[2rem]">
+            <div className="bg-white p-3 rounded-xl shadow-sm mb-4 flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <div className="flex-1">
+                <div className="text-xs text-gray-400">Destination</div>
+                <div className="font-medium text-sm truncate">{phoneState.appData?.destination || 'Unknown Location'}</div>
+              </div>
+              <MapPin className="w-4 h-4 text-gray-400" />
+            </div>
+            
+            <div className="flex-1 bg-gray-200 rounded-xl mb-4 relative overflow-hidden flex items-center justify-center">
+               {/* Map Placeholder */}
+               <div className="absolute inset-0 bg-[url('https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/-74.006,40.7128,12,0/300x400?access_token=pk.placeholder')] opacity-20" />
+               <div className="relative z-10 flex flex-col items-center gap-2">
+                 <MapPin className="w-8 h-8 text-blue-600 drop-shadow-lg" />
+                 <span className="text-xs font-medium text-gray-500 bg-white/80 px-2 py-1 rounded-full backdrop-blur-sm">
+                   {phoneState.appData?.destination || 'Destination'}
+                 </span>
+               </div>
+            </div>
+
+            <div className="bg-blue-600 text-white p-3 rounded-xl flex items-center justify-between shadow-lg shadow-blue-500/20">
+               <div className="flex flex-col">
+                 <span className="text-xs opacity-80">Estimated Time</span>
+                 <span className="font-bold">15 min</span>
+               </div>
+               <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                 <ArrowRight className="w-4 h-4" />
+               </div>
+            </div>
+          </div>
+        );
       default:
         return (
           <div className="flex flex-col h-full bg-zinc-900 text-white p-6 rounded-[2rem]">
             <div className="grid grid-cols-4 gap-4 mt-8">
-              {[Mail, Music, Clock, MessageSquare].map((Icon, i) => (
+              {[Mail, Music, Clock, MessageSquare, MapPin].map((Icon, i) => (
                 <div key={i} className="flex flex-col items-center gap-2">
                   <div className="w-12 h-12 bg-zinc-800 rounded-2xl flex items-center justify-center">
                     <Icon className="w-6 h-6 text-zinc-300" />
@@ -343,7 +386,7 @@ export default function NeuralBridgePage() {
                         <div className="text-emerald-400">TARGET: <span className="text-zinc-300">{signal.targetApp}</span></div>
                         <div className="text-emerald-400">PARAMS:</div>
                         {Object.entries(signal.parameters).map(([k, v]) => (
-                          <div key={k} className="ml-4 text-zinc-400">&quot;{k}&quot;: <span className="text-amber-300">&quot;{v}&quot;</span></div>
+                          <div key={k} className="ml-4 text-zinc-400">&quot;{k}&quot;: <span className="text-amber-300">&quot;{typeof v === 'string' ? v : JSON.stringify(v)}&quot;</span></div>
                         ))}
                       </motion.div>
                     )}
